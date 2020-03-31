@@ -1,10 +1,31 @@
 const express = require('express');
+const mongoose = require('mongoose');
+const cookieSession = require('cookie-session');
+const passport = require('passport');
+const keys = require('./config/keys');
+require('./models/User');
 require('./services/passport');
-const authRoutes = require('./routes/authRoutes');
+
+
+mongoose.connect(keys.mongoURI, {
+	useUnifiedTopology: true,
+	useNewUrlParser: true
+});
 
 const app = express();
 
-authRoutes(app); 
+app.use(
+	cookieSession({
+		maxAge: 30 * 24 * 60 * 60 * 1000,
+		keys: [keys.cookieKey]
+	})
+);
+
+app.use(passport.initialize());
+app.use(passport.session()); 
+
+require('./routes/authRoutes')(app);
+
 
 // if an environmental var is establisghed by heroku use that port else local 5000
 const PORT = process.env.PORT || 5000;
